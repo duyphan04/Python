@@ -1,16 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+from db import connect_to_database
 from ttkbootstrap import Style
 import mysql.connector
 
-# Function to connect to the database
-def connect_to_database():
-    return mysql.connector.connect(
-        host="localhost",  # Or your database host
-        user="root",
-        password="puppyduylun365",# Your database password
-        database="quiz_app" # Your database name
-    )
+# Function to handle window close event
+def on_closing():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        root.destroy()
+
 
 # Function to get a single question and its choices from the database
 def get_question_and_choices(question_id):
@@ -111,8 +109,6 @@ def next_question():
         messagebox.showinfo("Quiz Completed", f"Quiz Completed! Final score: {score}/{total_questions}")
         root.destroy()
 
-# Initialize the main application window, labels, buttons, etc.
-# ...
 
 # Initialize the score and total questions
 score = 0
@@ -123,6 +119,8 @@ root = tk.Tk()
 root.title("Quiz App")
 root.geometry("600x500")
 style = Style(theme="flatly")
+
+
 
 # Configure the font size for the question and choice buttons
 style.configure("TLabel", font=("Helvetica", 20))
@@ -178,9 +176,12 @@ current_question_id = '5b1422651fdde'  # Replace with the actual first qid from 
 # Show the first question
 show_question()
 
+
+# Override the window close event
+root.protocol("WM_DELETE_WINDOW", on_closing)
+
 # Start the main event loop
 root.mainloop()
-
 
 
 
