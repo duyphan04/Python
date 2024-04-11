@@ -173,7 +173,7 @@ next_btn = ttk.Button(
 )
 next_btn.pack(pady=10)
 # Initialize the current question index with the first question id from the database
-current_question_id = '5b141d712647f'  # Replace with the actual first qid from your questions table
+current_question_id = '5b1422651fdde'  # Replace with the actual first qid from your questions table
 
 # Show the first question
 show_question()

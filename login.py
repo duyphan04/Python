@@ -40,7 +40,8 @@ def sign_in():
         os.system('python question.py')
     else:
         messagebox.showerror("Error", "Invalid username or password")
-
+def sign_up():
+    os.system('python sign_up.py')
 root=Tk()
 root.title("Login")
 root.geometry('925x500+300+200')
@@ -97,7 +98,7 @@ Button(frame, width=39, pady=7, text='Sign in', bg='#57a1f8', fg='white',border=
 label = Label(frame, text="Don't have an account?", bg='white', font=('Microsoft YaHei UI Light', 10))
 label.place(x=25,y=270)
 
-sign_up = Button (frame, width=6,text='Sign up', bg='white', fg='#57a1f8',cursor='hand2',border=0)
+sign_up = Button (frame, width=6,text='Sign up', bg='white', fg='#57a1f8',cursor='hand2',border=0, command=sign_up)
 sign_up.place(x=180,y=273)
 
 root.mainloop()
