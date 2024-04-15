@@ -28,7 +28,8 @@ def sign_in():
     entered_username = user.get()
 
     if authentication(entered_username, entered_password):
-        os.system('python question.py')
+        os.environ['USERNAME'] = entered_username
+        os.system('python quiz_app.py')
     else:
         messagebox.showerror("Error", "Invalid username or password")
 

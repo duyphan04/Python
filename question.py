@@ -1,14 +1,36 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, Label
 from db import connect_to_database
 from ttkbootstrap import Style
 import mysql.connector
+import os
+from datetime import datetime
+
+def insert_into_leaderboard(email, score, completion_time):
+    connection = connect_to_database()
+    cursor = connection.cursor()
+
+    insert_query = f"INSERT INTO leaderboard (email, score, time) VALUES ('{email}', {score}, '{completion_time}');"
+    cursor.execute(insert_query)
+    connection.commit()
+    connection.close()
 
 # Function to handle window close event
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.destroy()
 
+def get_user_email(username):
+    connection = connect_to_database()
+    cursor = connection.cursor(dictionary=True)
+
+    email_query = f"SELECT email FROM user WHERE name = '{username}';"
+    cursor.execute(email_query)
+    email_record = cursor.fetchone()
+    email = email_record["email"] if email_record else None
+
+    connection.close()
+    return email
 
 # Function to get a single question and its choices from the database
 def get_question_and_choices(question_id):
@@ -107,6 +129,9 @@ def next_question():
     else:
         # If all questions have been answered, display the final score and end the quiz
         messagebox.showinfo("Quiz Completed", f"Quiz Completed! Final score: {score}/{total_questions}")
+        email = get_user_email(logged_in_username)
+        completion_time = datetime.now()
+        insert_into_leaderboard(email, score, completion_time)
         root.destroy()
 
 
@@ -170,12 +195,15 @@ next_btn = ttk.Button(
     state="disabled"
 )
 next_btn.pack(pady=10)
-# Initialize the current question index with the first question id from the database
+
 current_question_id = '5b1422651fdde'  # Replace with the actual first qid from your questions table
 
 # Show the first question
 show_question()
 
+logged_in_username = os.getenv('USERNAME')
+username_label = Label(root, text=logged_in_username)
+username_label.pack()
 
 # Override the window close event
 root.protocol("WM_DELETE_WINDOW", on_closing)
