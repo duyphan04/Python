@@ -32,6 +32,9 @@ def open_question(event):
     username = get_username()
     os.system(f'set USERNAME={username} && python question.py')
 
+def open_leaderboard(event):
+    os.system('python leaderboard.py')
+
 def show_taskbar(event):
     global taskbar, username_label
     if taskbar is None:
@@ -55,8 +58,13 @@ def show_taskbar(event):
         home_label = Label(taskbar, text="Home", font=('Century Gothic',12), bg="#fffacd", cursor="hand2")
         home_label.pack(pady=17, padx=10, anchor="w")
         home_label.bind("<Button-1>", open_question)
+
         Label(taskbar, text="Account", font=('Century Gothic',12), bg="#fffacd").pack(pady=17, padx=10, anchor="w")
-        Label(taskbar, text="Leaderboard",font=('Century Gothic',12),bg="#fffacd").pack(pady=17, padx=10, anchor="w")
+
+        leaderboard_label = Label(taskbar, text="Leaderboard",font=('Century Gothic',12),bg="#fffacd")
+        leaderboard_label.pack(pady=17, padx=10, anchor="w")
+        leaderboard_label.bind("<Button-1>", open_leaderboard)
+
         Label(taskbar, text="Statistic",font=('Century Gothic',12),bg="#fffacd").pack(pady=17, padx=10, anchor="w")
         Label(taskbar, text="Setting",font=('Century Gothic',12),bg="#fffacd").pack(pady=17, padx=10, anchor="w")
     else:

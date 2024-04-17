@@ -38,6 +38,7 @@ def sign_up():
     password_data = password.get()
     confirm_password_data = confirm_password.get()
     email_data = email.get()
+    role_data = "USER"
 
     # Check if password and confirm password are the same
     if password_data != confirm_password_data:
@@ -49,8 +50,8 @@ def sign_up():
     cursor = db_connection.cursor()
 
     # Insert the data into the user table
-    insert_query = "INSERT INTO user (name, password, email) VALUES (%s, %s, %s)"
-    cursor.execute(insert_query, (username_data, password_data, email_data))
+    insert_query = "INSERT INTO user (name, password, email, role) VALUES (%s, %s, %s, %s)"
+    cursor.execute(insert_query, (username_data, password_data, email_data, role_data))
 
     # Commit the changes and close the connection
     db_connection.commit()
