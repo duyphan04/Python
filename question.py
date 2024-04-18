@@ -5,6 +5,7 @@ from ttkbootstrap import Style
 import mysql.connector
 import os
 from datetime import datetime
+import sys
 
 def insert_into_leaderboard(email, score, completion_time):
     connection = connect_to_database()
@@ -196,9 +197,18 @@ next_btn = ttk.Button(
 )
 next_btn.pack(pady=10)
 
-current_question_id = '5b1422651fdde'  # Replace with the actual first qid from your questions table
+eid = sys.argv[1]
 
-# Show the first question
+conn = connect_to_database()
+cursor = conn.cursor()
+
+cursor.execute(f"SELECT qid FROM questions WHERE eid = '{eid}' ORDER BY sn LIMIT 1")
+result = cursor.fetchone()
+
+if result is not None:
+    current_question_id = result[0]  # Replace with the actual first qid from your questions table
+
+print(current_question_id)
 show_question()
 
 logged_in_username = os.getenv('USERNAME')

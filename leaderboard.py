@@ -14,8 +14,8 @@ window.configure(bg="#fff")
 window.resizable(False, False)
 
 heading = Label(window, text='LEADERBOARD',fg="#57a1f8", bg='white',
-                 font=('Century Gothic',23,'bold'))
-heading.place(x=350, y=20)
+                 font=('Century Gothic',50,'bold'))
+heading.place(x=260, y=30)
 
 # Connect to the database
 db_connection = connect_to_database()
@@ -55,7 +55,7 @@ for i, row in enumerate(rows, start=1):
     name, score = row
     # Create a frame for each row
     frame = Frame(window, bg='white')
-    frame.place(x=300, y=50 + i * 100)
+    frame.place(x=300, y=50 + i * 80)
     # Create a label inside the frame
     if i in [1, 2, 3]:
         # Load the image

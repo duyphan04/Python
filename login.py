@@ -29,6 +29,7 @@ def sign_in():
 
     if authentication(entered_username, entered_password):
         os.environ['USERNAME'] = entered_username
+        root.destroy()
         os.system('python quiz_app.py')
     else:
         messagebox.showerror("Error", "Invalid username or password")

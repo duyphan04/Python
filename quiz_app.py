@@ -28,9 +28,31 @@ def get_role() :
 
     return role  # Return the role
 
-def open_question(event):
-    username = get_username()
-    os.system(f'set USERNAME={username} && python question.py')
+def open_home(event):
+    home_page_lb = Label(root, text="LET, PLAY", font=('Century Gothic',30), bg="white")
+    home_page_lb.place(x=200, y=20)
+
+    conn = connect_to_database()
+    cursor = conn.cursor()
+
+    # Execute the query
+    cursor.execute("SELECT eid, title FROM quiz")
+    quizzes = cursor.fetchall()
+
+    # Close the connection
+    conn.close()
+
+    # Create labels
+    y_position = 100
+    for quiz in quizzes:
+        eid, title = quiz
+        label = Label(root, text=title, font=('Century Gothic',20), bg="white", cursor="hand2")
+        label.place(x=200, y=y_position)
+        label.bind("<Button-1>", lambda event, eid=eid: open_question(event, eid))
+        y_position += 80  # Update y_position for the next label
+
+def open_question(event, eid):
+    os.system(f'python question.py {eid}')
 
 def open_leaderboard(event):
     os.system('python leaderboard.py')
@@ -57,7 +79,7 @@ def show_taskbar(event):
         # Add some content to the taskbar
         home_label = Label(taskbar, text="Home", font=('Century Gothic',12), bg="#fffacd", cursor="hand2")
         home_label.pack(pady=17, padx=10, anchor="w")
-        home_label.bind("<Button-1>", open_question)
+        home_label.bind("<Button-1>", open_home)
 
         Label(taskbar, text="Account", font=('Century Gothic',12), bg="#fffacd").pack(pady=17, padx=10, anchor="w")
 
