@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox, ttk, Label
 from db import connect_to_database
 from ttkbootstrap import Style
-import mysql.connector
 import os
 from datetime import datetime
 import sys
@@ -33,6 +32,11 @@ def get_user_email(username):
     connection.close()
     return email
 
+def get_number_of_choices(question_id):
+    cursor.execute(f"SELECT choice FROM questions WHERE qid = '{question_id}'")
+    result = cursor.fetchone()
+    return result[0] if result is not None else 0
+
 # Function to get a single question and its choices from the database
 def get_question_and_choices(question_id):
     connection = connect_to_database()
@@ -49,6 +53,8 @@ def get_question_and_choices(question_id):
     cursor.execute(choices_query)
     choices_records = cursor.fetchall()
     choices = [choice["option"] for choice in choices_records] if choices_records else []
+
+
 
     connection.close()
     return question, choices
@@ -72,10 +78,10 @@ def get_correct_answer(question_id):
     return correct_answer
 
 # Function to get the total number of questions from the database
-def get_total_questions():
+def get_total_questions(eid):
     connection = connect_to_database()
     cursor = connection.cursor()
-    cursor.execute("SELECT COUNT(*) FROM questions;")
+    cursor.execute("SELECT MAX(sn) FROM questions WHERE eid = %s;", (eid,))
     total = cursor.fetchone()[0]
     connection.close()
     return total
@@ -85,9 +91,9 @@ def show_question():
     global current_question_id
     question, choices = get_question_and_choices(current_question_id)
     qs_label.config(text=question)
-
+    num_choices = get_number_of_choices(current_question_id)
     # Display the choices on the buttons
-    for i in range(4):
+    for i in range(num_choices):
         choice_btns[i].config(text=choices[i] if i < len(choices) else "", state="normal")  # Reset button state
 
     # Clear the feedback label and disable the next button
@@ -108,10 +114,15 @@ def check_answer(choice):
         feedback_label.config(text="Correct!", foreground="green")
     else:
         feedback_label.config(text="Incorrect!", foreground="red")
+        # Enable the correct answer button
+        for button in choice_btns:
+            if button.cget("text") == correct_answer:
+                button.config(state="normal")
 
-    # Disable all choice buttons and enable the next button
+    # Disable all choice buttons
     for button in choice_btns:
-        button.config(state="disabled")
+        if button.cget("text") != correct_answer:
+            button.config(state="disabled")
     next_btn.config(state="normal")
 
 # Function to move to the next question
@@ -138,19 +149,20 @@ def next_question():
 
 # Initialize the score and total questions
 score = 0
-total_questions = get_total_questions()
+eid = sys.argv[1]
+total_questions = get_total_questions(eid)
 
 # Create the main window
 root = tk.Tk()
 root.title("Quiz App")
-root.geometry("600x500")
+root.geometry("925x700+300+50")
 style = Style(theme="flatly")
 
 
 
 # Configure the font size for the question and choice buttons
-style.configure("TLabel", font=("Helvetica", 20))
-style.configure("TButton", font=("Helvetica", 16))
+style.configure("TLabel", font=("Century Gothic", 20))
+style.configure("TButton", font=("Century Gothic", 16))
 
 # Create the question label
 qs_label = ttk.Label(
@@ -161,7 +173,7 @@ qs_label = ttk.Label(
 )
 qs_label.pack(pady=10)
 
-# Create the choice buttons
+
 choice_btns = []
 for i in range(4):
     button = ttk.Button(
@@ -171,7 +183,6 @@ for i in range(4):
     button.pack(pady=5)
     choice_btns.append(button)
 
-# Create the feedback label
 feedback_label = ttk.Label(
     root,
     anchor="center",
@@ -197,7 +208,7 @@ next_btn = ttk.Button(
 )
 next_btn.pack(pady=10)
 
-eid = sys.argv[1]
+
 
 conn = connect_to_database()
 cursor = conn.cursor()

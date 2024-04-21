@@ -57,6 +57,13 @@ def open_question(event, eid):
 def open_leaderboard(event):
     os.system('python leaderboard.py')
 
+def open_admin(event):
+    role = get_role()
+    if role == 'ADMIN':
+        os.system(f'python admin.py')
+    else:
+        messagebox.showerror("Error", "Access denied. Only admins can access this feature.")
+
 def show_taskbar(event):
     global taskbar, username_label
     if taskbar is None:
@@ -81,21 +88,22 @@ def show_taskbar(event):
         home_label.pack(pady=17, padx=10, anchor="w")
         home_label.bind("<Button-1>", open_home)
 
-        Label(taskbar, text="Account", font=('Century Gothic',12), bg="#fffacd").pack(pady=17, padx=10, anchor="w")
+        admin_label = Label(taskbar, text="Admin", font=('Century Gothic',12), bg="#fffacd", cursor="hand2")
+        admin_label.pack(pady=17, padx=10, anchor="w")
+        admin_label.bind("<Button-1>", open_admin)
 
-        leaderboard_label = Label(taskbar, text="Leaderboard",font=('Century Gothic',12),bg="#fffacd")
+        leaderboard_label = Label(taskbar, text="Leaderboard",font=('Century Gothic',12),bg="#fffacd", cursor="hand2")
         leaderboard_label.pack(pady=17, padx=10, anchor="w")
         leaderboard_label.bind("<Button-1>", open_leaderboard)
 
-        Label(taskbar, text="Statistic",font=('Century Gothic',12),bg="#fffacd").pack(pady=17, padx=10, anchor="w")
-        Label(taskbar, text="Setting",font=('Century Gothic',12),bg="#fffacd").pack(pady=17, padx=10, anchor="w")
+        Label(taskbar, text="Setting",font=('Century Gothic',12),bg="#fffacd",cursor="hand2").pack(pady=17, padx=10, anchor="w")
     else:
         taskbar.destroy()
         taskbar = None
         username_label.place_forget()
 
 img = PhotoImage(file="images/user.png")
-img_label = Label(root, image=img, bg="white")
+img_label = Label(root, image=img, bg="white", cursor="hand2")
 img_label.place(x=820, y=0)
 img_label.bind("<Button-1>", show_taskbar)
 
