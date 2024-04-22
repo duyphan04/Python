@@ -98,17 +98,5 @@ label.place(x=25,y=250)
 sign_up = Button(frame, width=6, text='Sign up', bg='white', fg='#57a1f8', cursor='hand2', border=0, command=sign_up, font=("Century", 10, "underline"))
 sign_up.place(x=200,y=248)
 
-orLabel = Label(frame,text="----------------------------------OR-----------------------------------"
-                ,bg="white",font=('Century Gothic', 10))
-orLabel.place(x=25,y=280)
-
-facebook_logo = PhotoImage(file="images/facebook.png")
-Label(frame, image=facebook_logo, bg="white").place(x=95, y=320)
-
-google_logo = PhotoImage(file="images/google.png")
-Label(frame, image=google_logo, bg="white").place(x=155, y=320)
-
-github_logo = PhotoImage(file="images/github.png")
-Label(frame, image=github_logo, bg="white").place(x=215, y=320)
 
 root.mainloop()
