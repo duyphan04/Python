@@ -15,7 +15,6 @@ def insert_into_leaderboard(email, score, completion_time):
     connection.commit()
     connection.close()
 
-# Function to handle window close event
 def on_closing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.destroy()
@@ -141,7 +140,7 @@ def next_question():
     else:
         # If all questions have been answered, display the final score and end the quiz
         messagebox.showinfo("Quiz Completed", f"Quiz Completed! Final score: {score}/{total_questions}")
-        email = get_user_email(logged_in_username)
+        email = get_user_email(os.getenv('USERNAME'))
         completion_time = datetime.now()
         insert_into_leaderboard(email, score, completion_time)
         root.destroy()
@@ -219,17 +218,11 @@ result = cursor.fetchone()
 if result is not None:
     current_question_id = result[0]  # Replace with the actual first qid from your questions table
 
-print(current_question_id)
 show_question()
 
-logged_in_username = os.getenv('USERNAME')
-username_label = Label(root, text=logged_in_username)
-username_label.pack()
 
-# Override the window close event
 root.protocol("WM_DELETE_WINDOW", on_closing)
 
-# Start the main event loop
 root.mainloop()
 
 
