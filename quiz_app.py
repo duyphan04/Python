@@ -5,7 +5,8 @@ import os
 from tkinter import simpledialog
 import random
 import string
-from tkinter import messagebox
+import pandas as pd
+from tkinter import filedialog,messagebox
 
 root = tk.Tk()
 root.geometry('925x500+300+200')
@@ -178,10 +179,292 @@ def admin_page():
         cursor.execute("INSERT INTO answer (qid, ansid) VALUES (%s, %s)", (qid, correct_option_id))    
         conn.commit()
         conn.close()
+    # Code Test Edit Admin
+    
+    def edit_question(event, eid):
+      
+        def show_question(qid, qns, optn):
+            # Clear the edit_page_fm before showing a new question
+            
+
+          
+            class EditQuestionDialog(simpledialog.Dialog):
+                def __init__(self, master, qid, qns, optn, title=None):
+                    self.qid = qid
+                    self.qns = qns
+                    self.optn = optn
+                    super().__init__(master, title=title)
+
+                def body(self, master):
+                    self.qid_label = Label(master, text=f"Question ID: {self.qid}", font=("Century Gothic", 16))
+                    self.qid_label.grid(row=0, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+
+                    self.question_label = Label(master, text="Question:", font=("Century Gothic", 14))
+                    self.question_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+                    self.question_entry = Entry(master, font=("Century Gothic", 14))
+                    self.question_entry.insert(tk.END, self.qns)
+                    self.question_entry.grid(row=1, column=1, padx=10, pady=5)
+
+                    self.option_entries = []
+                    for i, (opt, opt_id) in enumerate(self.optn):
+                        option_label = Label(master, text=f"Option {i+1}:", font=("Century Gothic", 14))
+                        option_label.grid(row=i+2, column=0, padx=10, pady=5, sticky="w")
+                        option_entry = Entry(master, font=("Century Gothic", 14))
+                        option_entry.insert(tk.END, opt)
+                        option_entry.grid(row=i+2, column=1, padx=10, pady=5)
+                        self.option_entries.append(option_entry)
+                    self.answer_label = Label(master, text="Answer:", font=("Century Gothic", 14))
+                    self.answer_label.grid(row=len(optn)+2, column=0, padx=10, pady=5, sticky="w")
+                    self.answer_entry = Entry(master, font=("Century Gothic", 14))
+                    self.answer_entry.grid(row=len(optn)+2, column=1, padx=10, pady=5)
+                    save_button = Button(master, text="Save Changes", font=("Century Gothic", 14), command=lambda: save_changes(self))
+                    save_button.grid(row=len(optn)+3, column=0, columnspan=1, pady=1)
+                    remove_button = Button(master, text="Remove", font=("Century Gothic", 14), command=lambda: remove_changes(self))
+                    remove_button.grid(row=len(optn)+3, column=2, columnspan=1, pady=1)
+                    return self.question_entry
+                def buttonbox(self):
+                    pass
+                def apply(self):
+                    question_text = self.question_entry.get()
+                    option_texts = [entry.get() for entry in self.option_entries]
+                    print(question_text, option_texts)
+               
+            dialog = EditQuestionDialog(edit_page_fm, qid, qns, optn, title="Edit Question")
+            dialog.mainloop()
+       
+        def save_changes(dialog):
+    # Lưu lại thông tin câu hỏi vào cơ sở dữ liệu
+            update_question(dialog.qid, dialog.question_entry.get())
+
+            # Lưu lại thông tin các tùy chọn vào cơ sở dữ liệu
+            for i, entry in enumerate(dialog.option_entries):
+                option_id = dialog.optn[i][1]  # Lấy giá trị optionid từ dialog.options
+                update_option(option_id, entry.get())
+            correct_answer_index = int(dialog.answer_entry.get()) - 1
+            new_answer = dialog.optn[correct_answer_index][1]
+            update_answer(dialog.qid,new_answer)
+            messagebox.showinfo("Success", "Changes saved successfully!")
+        def remove_changes(dialog):
+            # Implement the logic to remove the question, its options, and answer from the database
+            remove_question(dialog.qid)
+            messagebox.showinfo("Success", "Question removed successfully!")
+
+        def remove_question(qid):
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            # Delete options associated with the question
+            cursor.execute("DELETE FROM options WHERE qid = %s", (qid,))
+            # Delete answer associated with the question
+            cursor.execute("DELETE FROM answer WHERE qid = %s", (qid,))
+            # Delete the question itself
+            cursor.execute("DELETE FROM questions WHERE qid = %s", (qid,))
+            conn.commit()
+            conn.close()
+        def get_options_for_question(qid):
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            cursor.execute("SELECT `option`,`optionid` FROM options WHERE qid = %s", (qid,))
+            options = cursor.fetchall()
+            conn.close()
+            return options
+
+        def update_question(qid, new_text):
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE questions SET qns = %s WHERE qid = %s", (new_text, qid))
+            conn.commit()
+            conn.close()
+
+        def update_option(optionid, new_text):
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE options SET `option` = %s WHERE `optionid` = %s", (new_text, optionid))
+            conn.commit()
+            conn.close()
+        def update_answer(qid, new_ansid):
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE answer SET `ansid` = %s WHERE `qid` = %s", (new_ansid, qid))
+            conn.commit()
+            conn.close()
+
+        # Create a new frame for editing questions
+        edit_window = tk.Toplevel(root)
+        edit_window.title("Edit Questions")
+
+        # Tạo một canvas để chứa danh sách câu hỏi
+        canvas = tk.Canvas(edit_window, bg="#fff")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Thêm thanh cuộn
+        scrollbar = tk.Scrollbar(edit_window, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Tạo một frame để chứa các câu hỏi
+        edit_page_fm = tk.Frame(canvas, bg="#fff")
+        canvas.create_window((0, 0), window=edit_page_fm, anchor="nw")
+
+        # Lấy danh sách câu hỏi từ cơ sở dữ liệu
+        conn = connect_to_database()
+        cursor = conn.cursor()
+        cursor.execute("SELECT qid, qns, choice FROM questions WHERE eid = %s", (eid,))
+        questions = cursor.fetchall()
+        conn.close()
+
+        # Tạo danh sách nút cho mỗi câu hỏi
+        for qid, qns, choice in questions:
+            optn = get_options_for_question(qid)
+            question_button = tk.Button(edit_page_fm, text=f"Question ID: {qid}\nQuestion: {qns}", font=("Century Gothic", 14),
+                                        command=lambda qid=qid, qns=qns, optn=optn: show_question(qid, qns, optn))
+            question_button.pack(pady=5)
+        def on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        edit_page_fm.bind("<Configure>", on_frame_configure)
+
+
+        
+
+
+
+    def edit_quiz():
+        home_page_lb = Label(admin_page_fm, text="Choose the topic you want to edit questions for:", font=('Century Gothic',25,'bold'), bg="white")
+        home_page_lb.place(x=150, y=150)
+
+        conn = connect_to_database()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT eid, title FROM quiz")
+        quizzes = cursor.fetchall()
+
+        conn.close()
+
+        y_position = 250
+        for quiz in quizzes:
+            eid, title = quiz
+            label = Label(admin_page_fm, text=title, font=('Century Gothic',20), bg="white", cursor="hand2")
+            label.place(x=380, y=y_position)
+            label.bind("<Button-1>", lambda event, eid=eid: edit_question(event, eid))
+            y_position += 80
+    def import_file():
+        file_path = filedialog.askopenfilename()
+        if file_path:
+        # Kết nối đến cơ sở dữ liệu MySQL
+            conn = connect_to_database()
+            cursor = conn.cursor()
+            try:
+                df = pd.read_excel(file_path,header= 0)
+                for _, row in df.iterrows():
+                        eid, qid, qns, choice, answer, *options = row  # Sử dụng *options để lấy tất cả giá trị còn lại
+                        cursor.execute("SELECT COUNT(*) FROM questions WHERE eid = %s", (eid,))
+                        result = cursor.fetchone()
+                        if result[0] == 0:
+                            # Nếu eid không tồn tại, bạn có thể xử lý ở đây hoặc bỏ qua câu hỏi này
+                            continue
+                        cursor.execute("SELECT MAX(sn) FROM questions WHERE eid = %s", (eid,))
+                        result = cursor.fetchone()
+                        max_sn = result[0] if result[0] is not None else 0
+                        next_sn = max_sn + 1  
+                        # Thêm câu hỏi vào bảng questions
+                        cursor.execute("INSERT INTO questions (eid, qid, qns, choice,sn) VALUES (%s, %s, %s, %s, %s)", (eid, qid, qns, choice,next_sn))
+                        otp = [None] * choice
+                        for idx in range(choice):
+                            option_text = options[idx] 
+                            option_id = generate_qid()
+                            otp[idx] =option_id
+                            cursor.execute("INSERT INTO options (qid, `option`, optionid) VALUES (%s, %s, %s)", (qid, option_text, option_id))
+                        # Thêm đáp án vào bảng answer
+                        answerid= otp[answer-1]
+                        cursor.execute("INSERT INTO answer (qid, ansid) VALUES (%s, %s)", (qid, answerid))
+                        # Thêm các lựa chọn vào bảng options
+                        
+                conn.commit()
+                # Thông báo import thành công
+                messagebox.showinfo("Success", "Import data successfully!")
+            except Exception as e:
+                # Rollback nếu có lỗi
+                conn.rollback()
+                messagebox.showerror("Error", f"Error occurred: {str(e)}")
+
+            finally:
+                # Đóng kết nối
+                cursor.close()
+                conn.close()
+    # nut export
+    def export_file():
+        try:
+            # Kết nối đến cơ sở dữ liệu MySQL
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            # Truy vấn dữ liệu từ bảng questions
+            cursor.execute("SELECT eid, qid, qns, choice, sn FROM questions")
+            questions_data = cursor.fetchall()
+            questions_df = pd.DataFrame(questions_data, columns=['eid', 'qid', 'qns', 'choice', 'sn'])
+
+            # Truy vấn dữ liệu từ bảng options
+            cursor.execute("SELECT qid, `option`, optionid FROM options")
+            options_data = cursor.fetchall()
+            options_df = pd.DataFrame(options_data, columns=['qid', 'option', 'optionid'])
+
+            # Truy vấn dữ liệu từ bảng answer
+            cursor.execute("SELECT qid, ansid FROM answer")
+            answer_data = cursor.fetchall()
+            answer_df = pd.DataFrame(answer_data, columns=['qid', 'ansid'])
+
+            # Truy vấn dữ liệu từ bảng user
+            cursor.execute("SELECT name, college, email, password, role FROM user")
+            user_data = cursor.fetchall()
+            user_df = pd.DataFrame(user_data, columns=['name', 'college', 'email', 'password', 'role'])
+
+            # Truy vấn dữ liệu từ bảng quiz
+            cursor.execute("SELECT id, eid, title, total, date FROM quiz")
+            quiz_data = cursor.fetchall()
+            quiz_df = pd.DataFrame(quiz_data, columns=['id', 'eid', 'title', 'total', 'date'])
+
+            # Truy vấn dữ liệu từ bảng leaderboard
+            cursor.execute("SELECT id, email, score, time FROM leaderboard")
+            leaderboard_data = cursor.fetchall()
+            leaderboard_df = pd.DataFrame(leaderboard_data, columns=['id', 'email', 'score', 'time'])
+
+            # Yêu cầu người dùng chọn nơi lưu file Excel
+            file_path = filedialog.asksaveasfilename(defaultextension=".xlsx")
+
+            if file_path:
+                # Tạo một Excel Writer object
+                with pd.ExcelWriter(file_path) as writer:
+                    # Xuất DataFrame của từng bảng ra một sheet riêng biệt trong file Excel
+                    questions_df.to_excel(writer, sheet_name='questions', index=False)
+                    options_df.to_excel(writer, sheet_name='options', index=False)
+                    answer_df.to_excel(writer, sheet_name='answer', index=False)
+                    user_df.to_excel(writer, sheet_name='user', index=False)
+                    quiz_df.to_excel(writer, sheet_name='quiz', index=False)
+                    leaderboard_df.to_excel(writer, sheet_name='leaderboard', index=False)
+
+                # Thông báo xuất thành công
+                messagebox.showinfo("Success", "Export data successfully!")
+        except Exception as e:
+            # Hiển thị thông báo lỗi nếu có lỗi xảy ra
+            messagebox.showerror("Error", f"Error occurred: {str(e)}")
+        finally:
+            # Đóng kết nối
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    # Nut Edit 
 
     create_question_button = Button(admin_page_fm, text="Create new question", command=create_quiz, font=("Century Gothic", 20), bg="#fff")
     create_question_button.pack()
-
+    edit_question_button = Button(admin_page_fm, text="Edit Questions", font=("Century Gothic", 20), bg="#fff", command=edit_quiz)
+    edit_question_button.pack()
+    import_question_button = Button(admin_page_fm, text="Import", font=("Century Gothic", 10), bg="#fff",fg='#57a1f8', cursor='hand2', command=import_file)
+    import_question_button.pack()
+    import_question_button.place(x=850, y=0, width=80, height=20)
+    export_question_button = Button(admin_page_fm, text="Export", font=("Century Gothic", 10), bg="#fff", fg='#57a1f8', cursor='hand2', command=export_file)
+    export_question_button.pack()
+    export_question_button.place(x=850, y=30, width=80, height=20)
     admin_page_fm.pack(fill = tk.BOTH, expand=True)
 
 def settings_page():
