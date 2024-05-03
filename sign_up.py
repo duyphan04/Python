@@ -23,13 +23,18 @@ frame.place(x=480,y=40)
 heading=Label(frame, text="CREATE ACCOUNT",fg="#57a1f8",bg="white",font=("Century Gothic",23,"bold"))
 heading.place(x=35,y=0)
 
-def on_enter(e):
+def on_enter(e, is_password=False):
     e.widget.delete(0, 'end')
+    if is_password:
+        e.widget.config(show="*")
 
-def on_leave(e, default_text):
+def on_leave(e, default_text, is_password=False):
     name = e.widget.get()
     if name == '':
         e.widget.insert(0, default_text)
+        if is_password:
+            e.widget.config(show="")
+
 
 
 def sign_up():
@@ -48,6 +53,15 @@ def sign_up():
     # Connect to the database
     db_connection = connect_to_database()
     cursor = db_connection.cursor()
+
+    # Check if the email already exists
+    check_query = "SELECT * FROM user WHERE email = %s"
+    cursor.execute(check_query, (email_data,))
+    result = cursor.fetchone()
+
+    if result:
+        messagebox.showerror("Error", "Email already exists!")
+        return
 
     # Insert the data into the user table
     insert_query = "INSERT INTO user (name, password, email, role) VALUES (%s, %s, %s, %s)"
@@ -84,15 +98,15 @@ Frame(frame, width=295, height=2, bg='black').place(x=25, y=157)
 password = Entry(frame, width=25, fg='black', border=0, bg='white', font=('Century Gothic', 12))
 password.place(x=30, y=180)
 password.insert(0, "Password")
-password.bind('<FocusIn>', on_enter)
-password.bind('<FocusOut>', lambda e: on_leave(e, "Password"))
+password.bind('<FocusIn>', lambda e: on_enter(e, True))
+password.bind('<FocusOut>', lambda e: on_leave(e, "Password", True))
 Frame(frame, width=295, height=2, bg='black').place(x=25, y=207)
 
 confirm_password = Entry(frame, width=25, fg='black', border=0, bg='white', font=('Century Gothic', 12))
 confirm_password.place(x=30, y=230)
 confirm_password.insert(0, "Confirm Password")
-confirm_password.bind('<FocusIn>', on_enter)
-confirm_password.bind('<FocusOut>', lambda e: on_leave(e, "Confirm Password"))
+confirm_password.bind('<FocusIn>', lambda e: on_enter(e, True))
+confirm_password.bind('<FocusOut>', lambda e: on_leave(e, "Confirm Password", True))
 Frame(frame, width=295, height=2, bg='black').place(x=25, y=257)
 
 sign_up = Button(frame, width=39, pady=7, text='Sign up', bg='#57a1f8', fg='white', border=0, command=sign_up)

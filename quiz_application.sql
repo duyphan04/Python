@@ -194,7 +194,11 @@ INSERT INTO `leaderboard` VALUES (1,'22110295@student.hcmute.edu.vn',2,'2024-04-
 /*!40000 ALTER TABLE `leaderboard` ENABLE KEYS */;
 UNLOCK TABLES;
 
+ALTER TABLE leaderboard
+DROP FOREIGN KEY leaderboard_ibfk_1;
 
+ALTER TABLE leaderboard
+ADD CONSTRAINT leaderboard_ibfk_1 FOREIGN KEY (email) REFERENCES user(email) ON DELETE CASCADE ON UPDATE CASCADE;
 
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

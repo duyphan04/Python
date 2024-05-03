@@ -74,11 +74,13 @@ Frame(frame, width=295, height=2, bg='black').place(x=25, y=107 )
 
 
 def on_enter(e):
-    password.delete(0,'end')
+    if password.get() == "Password":
+        password.delete(0,'end')
+        password.config(show="*")
 
 def on_leave(e):
-    name=password.get()
-    if name == '':
+    if password.get() == '':
+        password.config(show="")
         password.insert(0, "Password")
 
 password = Entry(frame, width=25, fg='black',border=0, bg='white', 

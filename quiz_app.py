@@ -11,7 +11,7 @@ from tkinter import filedialog,messagebox
 root = tk.Tk()
 root.geometry('925x500+300+200')
 root.configure(bg="#fff")
-root.title('Test')
+root.title('Main Form')
 
 taskbar = None
 username_label = None
@@ -67,6 +67,104 @@ def switch_if_admin(indicator_lb, page):
     else:
         messagebox.showerror("Error", "Access denied. Only admins can access this feature.")
 
+def edit_account():
+    # Connect to the database
+    db_connection = connect_to_database()
+
+    # Create a cursor
+    cursor = db_connection.cursor()
+
+    # Execute the query
+    cursor.execute(f"SELECT * FROM user WHERE name = '{get_username()}'")
+
+    # Fetch the result
+    user = cursor.fetchone()
+
+    # Now `user` is a tuple containing the user's information
+    # You can access the information like this:
+    name, college, email, password, role = user
+
+    # Close the connection
+    cursor.close()
+    db_connection.close()
+
+
+    # Create a new frame for the edit account page
+    edit_account_page_fm = tk.Frame(main_fm, bg="#fff")
+
+    # Create labels and entry fields for each piece of user information
+    # The entry fields are pre-filled with the current information
+    name_label = tk.Label(edit_account_page_fm, text="Name", bg="white")
+    name_label.pack()
+    name_entry = tk.Entry(edit_account_page_fm)
+    name_entry.insert(0, name)
+    name_entry.pack()
+
+    college_label = tk.Label(edit_account_page_fm, text="COLLEGE", bg="white")
+    college_label.pack()
+    college_entry = tk.Entry(edit_account_page_fm)
+    if college is not None:
+        college_entry.insert(0, college)
+    else:
+        college_entry.insert(0, "")
+    college_entry.pack()
+
+    email_label = tk.Label(edit_account_page_fm, text="EMAIL", bg="white")
+    email_label.pack()
+    email_entry = tk.Entry(edit_account_page_fm)
+    email_entry.insert(0, email)
+    email_entry.pack()
+
+    password_label = tk.Label(edit_account_page_fm, text="PASSWORD", bg="white")
+    password_label.pack()
+    password_entry = tk.Entry(edit_account_page_fm)
+    password_entry.insert(0, password)
+    password_entry.pack()
+
+    role_label = tk.Label(edit_account_page_fm, text="ROLE", bg="white")
+    role_label.pack()
+    role_entry = tk.Entry(edit_account_page_fm)
+    role_entry.insert(0, role)
+    role_entry.pack()
+
+    def save_changes():
+        # Get the updated information
+        updated_name = name_entry.get()
+        updated_college = college_entry.get()
+        updated_email = email_entry.get()
+        updated_password = password_entry.get()
+        updated_role = role_entry.get()
+
+        # Connect to the database
+        db_connection = connect_to_database()
+
+        # Create a cursor
+        cursor = db_connection.cursor()
+
+        # Execute the update query
+        query = """
+            UPDATE user
+            SET name = %s, college = %s, email = %s, 
+                password = %s, role = %s
+            WHERE name = %s
+        """
+        cursor.execute(query, (updated_name, updated_college, updated_email, updated_password, updated_role, get_username()))
+
+        # Commit the changes
+        db_connection.commit()
+
+        # Close the connection
+        cursor.close()
+        db_connection.close()
+
+        messagebox.showinfo("Success", "Changes saved successfully")
+
+    # Create a button to save the changes
+    save_button = tk.Button(edit_account_page_fm, text="SAVE", command=save_changes)
+    save_button.pack()
+
+    # Finally, pack the frame
+    edit_account_page_fm.pack(fill = tk.BOTH, expand=True)
 
 def open_question(event, eid):
     os.system(f'python question.py {eid}')
@@ -101,7 +199,7 @@ def admin_page():
     admin_page_fm = tk.Frame(main_fm, bg="#fff")
 
     def create_quiz():
-        home_page_lb = Label(admin_page_fm, text="Choose your topic, you want to add question", font=('Century Gothic',25,'bold'), bg="white")
+        home_page_lb = Label(admin_page_fm, text="Choose the topic, you want to add question", font=('Century Gothic',25,'bold'), bg="white", cursor="hand2")
         home_page_lb.place(x=150, y=150)
 
         conn = connect_to_database()
@@ -149,8 +247,7 @@ def admin_page():
             print("No question was entered.")
 
     def create_answers(qid):
-        dialog = CustomDialog(admin_page_fm, title="Create new answer", prompt="Please enter the number of answers:")
-        num_answers = int(dialog.result)
+        num_answers = 4
         answers = []
         conn = connect_to_database()
         cursor = conn.cursor()
@@ -185,8 +282,7 @@ def admin_page():
       
         def show_question(qid, qns, optn):
             # Clear the edit_page_fm before showing a new question
-            
-
+        
           
             class EditQuestionDialog(simpledialog.Dialog):
                 def __init__(self, master, qid, qns, optn, title=None):
@@ -194,6 +290,7 @@ def admin_page():
                     self.qns = qns
                     self.optn = optn
                     super().__init__(master, title=title)
+
 
                 def body(self, master):
                     self.qid_label = Label(master, text=f"Question ID: {self.qid}", font=("Century Gothic", 16))
@@ -233,7 +330,7 @@ def admin_page():
             dialog.mainloop()
        
         def save_changes(dialog):
-    # Lưu lại thông tin câu hỏi vào cơ sở dữ liệu
+            # Lưu lại thông tin câu hỏi vào cơ sở dữ liệu
             update_question(dialog.qid, dialog.question_entry.get())
 
             # Lưu lại thông tin các tùy chọn vào cơ sở dữ liệu
@@ -292,6 +389,22 @@ def admin_page():
         edit_window = tk.Toplevel(root)
         edit_window.title("Edit Questions")
 
+        # Set the size of the window
+        window_width = 800
+        window_height = 600
+        edit_window.geometry(f"{window_width}x{window_height}")
+
+        # Get the screen size
+        screen_width = edit_window.winfo_screenwidth()
+        screen_height = edit_window.winfo_screenheight()
+
+        # Calculate the position to center the window
+        position_top = int(screen_height / 2 - window_height / 2)
+        position_right = int(screen_width / 2 - window_width / 2)
+
+        # Position the window
+        edit_window.geometry(f"+{position_right}+{position_top}")
+
         # Tạo một canvas để chứa danh sách câu hỏi
         canvas = tk.Canvas(edit_window, bg="#fff")
         canvas.pack(side="left", fill="both", expand=True)
@@ -324,12 +437,8 @@ def admin_page():
         edit_page_fm.bind("<Configure>", on_frame_configure)
 
 
-        
-
-
-
     def edit_quiz():
-        home_page_lb = Label(admin_page_fm, text="Choose the topic you want to edit questions for:", font=('Century Gothic',25,'bold'), bg="white")
+        home_page_lb = Label(admin_page_fm, text="Choose the topic, you want to edit question", font=('Century Gothic',25,'bold'), bg="white", cursor="hand2")
         home_page_lb.place(x=150, y=150)
 
         conn = connect_to_database()
@@ -455,9 +564,9 @@ def admin_page():
                 conn.close()
     # Nut Edit 
 
-    create_question_button = Button(admin_page_fm, text="Create new question", command=create_quiz, font=("Century Gothic", 20), bg="#fff")
+    create_question_button = Button(admin_page_fm, text="Create new question", command=create_quiz, font=("Century Gothic", 20), bg="#fff", cursor="hand2", bd=0)
     create_question_button.pack()
-    edit_question_button = Button(admin_page_fm, text="Edit Questions", font=("Century Gothic", 20), bg="#fff", command=edit_quiz)
+    edit_question_button = Button(admin_page_fm, text="Edit Questions", font=("Century Gothic", 20), bg="#fff", command=edit_quiz, cursor='hand2', bd=0)
     edit_question_button.pack()
     import_question_button = Button(admin_page_fm, text="Import", font=("Century Gothic", 10), bg="#fff",fg='#57a1f8', cursor='hand2', command=import_file)
     import_question_button.pack()
@@ -470,9 +579,11 @@ def admin_page():
 def settings_page():
     settings_page_fm = tk.Frame(main_fm, bg="#fff")
 
-    settings_page_lb = Button(settings_page_fm, text="LOG OUT", font=('Century Gothic',20), bg="white", command=log_out)
-    settings_page_lb.pack(pady = 40)
+    settings_page_lb = Button(settings_page_fm, text="LOG OUT", font=('Century Gothic',20), bg="white", command=log_out, cursor="hand2", bd=0)
+    settings_page_lb.pack(pady = 5)
 
+    edit_account_lb = Button(settings_page_fm, text="EDIT ACCOUNT", font=('Century Gothic',20), bg="white", command=edit_account, cursor="hand2", bd=0)
+    edit_account_lb.pack(pady = 10)
 
     settings_page_fm.pack(fill = tk.BOTH, expand=True)
 
