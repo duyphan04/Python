@@ -330,16 +330,28 @@ def admin_page():
             dialog.mainloop()
        
         def save_changes(dialog):
-            # Lưu lại thông tin câu hỏi vào cơ sở dữ liệu
+            # Save question information to the database
             update_question(dialog.qid, dialog.question_entry.get())
 
-            # Lưu lại thông tin các tùy chọn vào cơ sở dữ liệu
+            # Save option information to the database
             for i, entry in enumerate(dialog.option_entries):
-                option_id = dialog.optn[i][1]  # Lấy giá trị optionid từ dialog.options
-                update_option(option_id, entry.get())
-            correct_answer_index = int(dialog.answer_entry.get()) - 1
-            new_answer = dialog.optn[correct_answer_index][1]
-            update_answer(dialog.qid,new_answer)
+                if i < len(dialog.optn):
+                    option_id = dialog.optn[i][1]  # Get optionid value from dialog.options
+                    update_option(option_id, entry.get())
+                else:
+                    print(f"Error: No option found for index {i}")
+
+            answer_entry_value = dialog.answer_entry.get()
+            if answer_entry_value.isdigit():
+                correct_answer_index = int(answer_entry_value) - 1
+                if correct_answer_index < len(dialog.optn):
+                    new_answer = dialog.optn[correct_answer_index][1]
+                    update_answer(dialog.qid, new_answer)
+                else:
+                    print(f"Error: No answer found for index {correct_answer_index}")
+            else:
+                print("Error: Invalid input for answer. Please enter a number.")
+
             messagebox.showinfo("Success", "Changes saved successfully!")
         def remove_changes(dialog):
             # Implement the logic to remove the question, its options, and answer from the database
@@ -390,7 +402,7 @@ def admin_page():
         edit_window.title("Edit Questions")
 
         # Set the size of the window
-        window_width = 800
+        window_width = 600
         window_height = 600
         edit_window.geometry(f"{window_width}x{window_height}")
 

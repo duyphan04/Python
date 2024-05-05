@@ -5,23 +5,23 @@ from ttkbootstrap import Style
 import os
 from datetime import datetime
 import sys
+import time
 
 # Add a global variable for the remaining time
 remaining_time = 10
 
-# Add a function to update the remaining time
+# Add a global variable for tracking whether an answer has been selected
+answer_selected = False
+
+# Function to update the remaining time
 def update_remaining_time():
-    global remaining_time
+    global remaining_time, answer_selected
     if remaining_time > 0:
         remaining_time -= 1
-        time_label.config(text=f"Time remaining: {remaining_time}s")
+        time_label.config(text=f"Time: {remaining_time}s")
         root.after(1000, update_remaining_time)
-    else:
-        # If time is up, consider the answer incorrect and move to the next question
-        feedback_label.config(text="Time's up!", foreground="red")
-        next_question()
-
-
+    elif not answer_selected:
+        next_question()  # Automatically move to the next question when the time is up and no answer has been selected
 
 def insert_into_leaderboard(email, score, completion_time):
     connection = connect_to_database()
@@ -102,9 +102,10 @@ def get_total_questions(eid):
     connection.close()
     return total
 
+
 # Function to display the current question and choices
 def show_question():
-    global current_question_id, remaining_time
+    global current_question_id, remaining_time, answer_selected
     question, choices = get_question_and_choices(current_question_id)
     qs_label.config(text=question)
     num_choices = get_number_of_choices(current_question_id)
@@ -116,19 +117,20 @@ def show_question():
     feedback_label.config(text="")
     next_btn.config(state="disabled")
 
-    # Start the countdown
-    remaining_time = 10
+    # Start the countdown and reset answer_selected
+    remaining_time = 10  # Reset the remaining time to 10 seconds
+    answer_selected = False
     update_remaining_time()
-
 
 # Function to check the selected answer and provide feedback
 def check_answer(choice):
-    global current_question_id, score, total_questions, remaining_time
+    global current_question_id, score, total_questions, remaining_time, answer_selected
     correct_answer = get_correct_answer(current_question_id)
     selected_choice = choice_btns[choice].cget("text")
 
-    # Stop the countdown
+    # Stop the countdown and mark that an answer has been selected
     remaining_time = 0
+    answer_selected = True
 
     # Check if the selected choice matches the correct answer
     if selected_choice == correct_answer:
@@ -146,7 +148,11 @@ def check_answer(choice):
             button.config(state="disabled")
         else:
             button.config(state="disabled")
+        
     next_btn.config(state="normal")
+
+
+    
     
 # Function to move to the next question
 def next_question():
